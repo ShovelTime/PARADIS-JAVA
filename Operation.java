@@ -6,7 +6,6 @@ class Operation implements Runnable {
 	private final int ACCOUNT_ID;
 	private final int AMOUNT;
 	private final Account account;
-	private boolean handleLock;
 
 	Operation(Bank bank, int accountId, int amount) {
 		ACCOUNT_ID = accountId;
@@ -21,7 +20,8 @@ class Operation implements Runnable {
 
 	public void run() {
 
-		//Acquire the lock on the account, if it is already owned by the current thread, which may
+		//Acquire the lock on the account, if it is already owned by the current thread, which may happen if we are running from a transaction, the hold count will be incremented instead.
+		//Meaning we must release here aswell to ensure proper decrementation of the lock.
 		account.acquireWriteLock();
 		try {
 			int balance = account.getBalance();
