@@ -2,14 +2,16 @@
 
 package paradis.assignment2;
 
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 class Account {
 	// Instance variables.
 	//Lock that determines access to the ability to modify this account.
-	private final ReentrantReadWriteLock accountLock = new ReentrantReadWriteLock(true);
+	//If proper ordering of execution is preferred, then setting the fairness value to true is ideal, though with overall much worse performance of about 50%.
+	private final ReentrantLock accountLock = new ReentrantLock(false);
 	private final int ID;
-	private volatile Integer balance;
+	private volatile int balance; //Volatile to ensure proper propagation of updates.
 
 	// Constructor.
 	Account(int id, int balance)
@@ -25,26 +27,20 @@ class Account {
 	}
 
 	void acquireWriteLock() {
-		accountLock.writeLock().lock();
+		accountLock.lock();
 	}
 
 	void releaseWriteLock() {
-		accountLock.writeLock().unlock();
+		accountLock.unlock();
 	}
 
 	int getBalance() {
-		accountLock.readLock().lock();
-		try {
-			return balance;
-		}
-		finally {
-			accountLock.readLock().unlock();
-		}
+		//Volatile guarantees Happens-Before relationships with the writes, and should therefore result in the most recent value being shown.
+		return balance;
 	}
 
 	void setBalance(int balance) {
-		if(!this.accountLock.writeLock().isHeldByCurrentThread()) throw new IllegalStateException();
-
+		if(!this.accountLock.isHeldByCurrentThread()) throw new IllegalStateException(); // no thread without a lock should be able to write here.
 		this.balance = balance;
 	}
 }
