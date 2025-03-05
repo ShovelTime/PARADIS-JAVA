@@ -5,15 +5,14 @@ package paradis.assignment2;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 class Bank {
 	// Instance variables.
 	private final List<Account> accounts = new ArrayList<Account>();
-	private final HashMap<Integer, Lock> busyAccounts = new HashMap<>();
-	private final ConcurrentHashMap<Transaction, HashSet<Integer>> runningConditions = new ConcurrentHashMap<>();
+	private final HashMap<Integer, Transaction> busyAccounts = new HashMap<>();
+	//private final ConcurrentHashMap<Transaction, HashSet<Integer>> runningTransactions = new ConcurrentHashMap<>();
 	private final ConcurrentLinkedQueue<WaitingTransaction> awaitingTransactions = new ConcurrentLinkedQueue<>();
 	
 	// Instance methods.
@@ -33,19 +32,38 @@ class Bank {
 		return account;
 	}
 
-	void requestExecution(HashSet<Integer> requestedAccount)
+	boolean requestTransaction(HashMap<Integer, ArrayList<FutureTask<Void>>> requestedAccount, Transaction caller)
 	{
 		synchronized(busyAccounts)
 		{
-			if(areAccountsAvailable(targetedAccounts))
+			if(areAccountsAvailable(requestedAccount.keySet()))
 			{
 
+				return true;
 			}
 		}
 
+		awaitingTransactions.add(new WaitingTransaction(caller, requestedAccount)); //Unable to lock all of the requested accounts, queue it for later.
+		return false;
 	}
 
-	private boolean areAccountsAvailable(HashSet<Integer> targetedAccounts)
+	void runTransaction(Transaction caller, HashMap<Integer, ArrayList<FutureTask<Void>>> tasks)
+	{
+		synchronized (busyAccounts)
+		{
+			for(Integer account : tasks.keySet())
+			{
+				busyAccounts.put(account, caller);
+			}
+		}
+	}
+
+	void tryAssignFromQueue()
+	{
+		if(awaitingTransactions.isEmpty()) return;
+	}
+
+	private boolean areAccountsAvailable(Set<Integer> targetedAccounts)
 	{
 		for(Integer desiredAccount: targetedAccounts)
 		{
@@ -53,5 +71,10 @@ class Bank {
 		}
 		return true;
 	}
+
+}
+
+record WaitingTransaction(Transaction source, HashMap<Integer, ArrayList<FutureTask<Void>>> tasks)
+{
 
 }

@@ -29,6 +29,6 @@ class Account {
 	}
 
 	void addBalance(int amount) {
-		balance.addAndGet()
+		balance.addAndGet(amount);
 	}
 }
