@@ -33,7 +33,7 @@ class Bank {
 		return account;
 	}
 
-	void requestAccounts(HashSet<Integer> targetedAccounts, Lock callingLock)
+	void requestExecution(HashSet<Integer> requestedAccount)
 	{
 		synchronized(busyAccounts)
 		{
@@ -53,10 +53,5 @@ class Bank {
 		}
 		return true;
 	}
-
-}
-
-record WaitingTransaction(Transaction transaction, Lock lock, HashSet<Integer> accounts)
-{
 
 }

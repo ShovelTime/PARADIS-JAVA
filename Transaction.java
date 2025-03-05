@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -25,13 +27,22 @@ class Transaction implements Runnable {
 	
 	public void run() {
 		if (!closed) return;
-		// Wait on locks before executing operations
+		//Construct Tasks
+		HashSet<Integer> targetedAccounts = new HashSet<>();
+		ArrayList<FutureTask<Void>> tasks = new ArrayList<>(operations.size());
 
-
-		// Execute the operations.
-		for (Operation operation : operations) {
-			operation.run();
+		for(Operation operation : operations)
+		{
+			Integer accountID = operation.getAccountId();
+			FutureTask<Void> task = new FutureTask<>(operation, null);
+			targetedAccounts.add(accountID);
+			tasks.add(task);
 		}
+
+
+
+		// Queue the operations for execution.
+
 	}
 
 }	

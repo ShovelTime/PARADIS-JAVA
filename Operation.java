@@ -18,8 +18,6 @@ class Operation implements Runnable {
 	}
 	
 	public void run() {
-		int balance = account.getBalance();
-		balance = balance + AMOUNT;
-		account.setBalance(balance);
+		account.addBalance(AMOUNT);
 	}
 }	
