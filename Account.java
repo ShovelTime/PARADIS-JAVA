@@ -2,33 +2,28 @@
 
 package paradis.assignment2;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 class Account {
 	// Instance variables.
 	private final int ID;
-	private volatile AtomicInteger balance;
-	
-	// Constructor.
-	Account(int id, int balance, Bank bank) {
-		ID = id;
-		this.balance = new AtomicInteger(balance);
-	}
-	
-	// Instance methods.
+	private int balance;
 
+	// Constructor.
+	Account(int id, int balance) {
+		ID = id;
+		this.balance = balance;
+	}
+
+	// Instance methods.
 
 	int getId() {
 		return ID;
 	}
-	
+
 	int getBalance() {
-		return balance.get();
+		return balance;
 	}
 
-	void addBalance(int amount) {
-		balance.addAndGet()
+	void setBalance(int balance) {
+		this.balance = balance;
 	}
 }
