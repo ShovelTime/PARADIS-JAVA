@@ -4,10 +4,11 @@ package paradis.assignment2;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 class Bank {
 	// Instance variables.
-	private final List<Account> accounts = new ArrayList<Account>();
+	private final List<Account> accounts = new CopyOnWriteArrayList<>(); // Allow multiple thread to add and access accounts.
 
 	// Instance methods.
 
