@@ -3,6 +3,7 @@
 package paradis.assignment2;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 class Transaction implements Runnable {
 	private final List<Operation> operations = new ArrayList<Operation>();
@@ -21,17 +22,21 @@ class Transaction implements Runnable {
 
 	public void run() {
 		if (!closed) return;
+		List<Account> accounts = new ArrayList<>(targetedAccounts);
+		Collections.sort(accounts);
 		// If we wanted to implement rollback here, what we could do is create a hashset would contain a list of cloned accounts with their original value,
 		// that could be restored if an exception occurs, this would however cause an additional performance loss due to clone semantics.
 
 		// Wait until all the locks are acquire before running, as per the requirements of Transactions
-		while(!acquireLocks());
+		while(!acquireLocks(accounts));
 		{
-            try {
-                Thread.sleep(0,1);
+			//allow more execution time to other threads for lock acquirement.
+			Thread.yield();
+            /*try {
+                Thread.sleep(0, random.nextInt(100));
             } catch (InterruptedException e) {
                 return;
-            }
+            }*/
         }
 		try {
 			// Execute the operations.
@@ -40,14 +45,14 @@ class Transaction implements Runnable {
 			}
 		}
 		finally {
-			releaseLocks(targetedAccounts);
+			releaseLocks(accounts);
 		}
 	}
 
-	private boolean acquireLocks() {
-		HashSet<Account> successfulLocks = new HashSet<>(targetedAccounts.size());
+	private boolean acquireLocks(List<Account> accounts) {
+		List<Account> successfulLocks = new ArrayList<>(targetedAccounts.size());
 		try {
-			for (Account account : targetedAccounts) {
+			for (Account account : accounts) {
 				if (account.tryAcquireWriteLock()) {
 					successfulLocks.add(account);
 				}
@@ -63,7 +68,7 @@ class Transaction implements Runnable {
 		return true;
 	}
 
-	private void releaseLocks(Set<Account> lockedAccounts) {
+	private void releaseLocks(List<Account> lockedAccounts) {
 		for(Account account : lockedAccounts) {
 			account.releaseWriteLock();
 		}

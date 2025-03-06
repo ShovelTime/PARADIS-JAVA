@@ -6,7 +6,7 @@ import java.sql.Time;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-class Account {
+class Account implements Comparable<Account> {
 	// Instance variables.
 	//Lock that determines access to the ability to modify this account.
 	//If proper ordering of execution is preferred, then setting the fairness value to true is ideal, though with overall much worse performance of about 50%.
@@ -15,8 +15,7 @@ class Account {
 	private volatile int balance; //Volatile to ensure proper propagation of updates.
 
 	// Constructor.
-	Account(int id, int balance)
-	{
+	Account(int id, int balance) {
 		ID = id;
 		this.balance = balance;
 	}
@@ -28,7 +27,7 @@ class Account {
 	}
 
 	boolean tryAcquireWriteLock() throws InterruptedException {
-		return accountLock.tryLock(5L, TimeUnit.MICROSECONDS);
+		return accountLock.tryLock();
 	}
 
 	void blockingAcquireWriteLock()
@@ -48,5 +47,10 @@ class Account {
 	void setBalance(int balance) {
 		if(!this.accountLock.isHeldByCurrentThread()) throw new IllegalStateException(); // no thread without a lock should be able to write here.
 		this.balance = balance;
+	}
+
+	@Override
+	public int compareTo(Account account) {
+		return Integer.compare(this.ID, account.ID);
 	}
 }
