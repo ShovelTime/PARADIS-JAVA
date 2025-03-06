@@ -22,7 +22,6 @@ class Operation implements Runnable {
 
 		//Acquire the lock on the account, if it is already owned by the current thread, which may happen if we are running from a transaction, the hold count will be incremented instead.
 		//Meaning we must release here aswell to ensure proper decrementation of the lock.
-
 		account.blockingAcquireWriteLock(); //we are not worried about deadlocks here since we are only acquiring a single resource.
         try {
 			int balance = account.getBalance();
@@ -32,7 +31,5 @@ class Operation implements Runnable {
 		finally { //ensures the lock is always released, even in the event of an exception as to prevent poisoning.
 			account.releaseWriteLock();
 		}
-
 	}
-
 }	

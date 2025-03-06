@@ -28,8 +28,7 @@ class Transaction implements Runnable {
 		// that could be restored if an exception occurs, this would however cause an additional performance loss due to clone semantics.
 
 		// Wait until all the locks are acquired before running, as per the requirements of Transactions
-		while(!acquireLocks(accounts));
-		{
+		while(!acquireLocks(accounts)) {
 			//allow more execution time to other threads for lock acquirement.
 			Thread.yield();
         }
