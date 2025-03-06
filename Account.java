@@ -2,8 +2,9 @@
 
 package paradis.assignment2;
 
+import java.sql.Time;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 class Account {
 	// Instance variables.
@@ -26,7 +27,12 @@ class Account {
 		return ID;
 	}
 
-	void acquireWriteLock() {
+	boolean tryAcquireWriteLock() throws InterruptedException {
+		return accountLock.tryLock(5L, TimeUnit.MICROSECONDS);
+	}
+
+	void blockingAcquireWriteLock()
+	{
 		accountLock.lock();
 	}
 
