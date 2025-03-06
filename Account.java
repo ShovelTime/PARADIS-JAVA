@@ -7,9 +7,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 class Account implements Comparable<Account> {
-	// Instance variables.
 	//Lock that determines access to the ability to modify this account.
-	//If proper ordering of execution is preferred, then setting the fairness value to true is ideal, though with overall much worse performance of about 50%.
+	//If proper ordering of execution within the thread pool is preferred, then setting the fairness value to true is ideal, though with overall much worse performance of about 50%.
 	private final ReentrantLock accountLock = new ReentrantLock(false);
 	private final int ID;
 	private volatile int balance; //Volatile to ensure proper propagation of updates.
@@ -26,12 +25,12 @@ class Account implements Comparable<Account> {
 		return ID;
 	}
 
-	boolean tryAcquireWriteLock() throws InterruptedException {
+	boolean tryAcquireWriteLock() {
 		return accountLock.tryLock();
 	}
 
-	void blockingAcquireWriteLock()
-	{
+	// alternative for when deadlocks are not a concern in the calling context.
+	void blockingAcquireWriteLock() {
 		accountLock.lock();
 	}
 
@@ -51,6 +50,7 @@ class Account implements Comparable<Account> {
 
 	@Override
 	public int compareTo(Account account) {
+		// Used in sorting of the accounts for the purpose of acquiring the locks.
 		return Integer.compare(this.ID, account.ID);
 	}
 }

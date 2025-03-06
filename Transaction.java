@@ -27,19 +27,13 @@ class Transaction implements Runnable {
 		// If we wanted to implement rollback here, what we could do is create a hashset would contain a list of cloned accounts with their original value,
 		// that could be restored if an exception occurs, this would however cause an additional performance loss due to clone semantics.
 
-		// Wait until all the locks are acquire before running, as per the requirements of Transactions
+		// Wait until all the locks are acquired before running, as per the requirements of Transactions
 		while(!acquireLocks(accounts));
 		{
 			//allow more execution time to other threads for lock acquirement.
 			Thread.yield();
-            /*try {
-                Thread.sleep(0, random.nextInt(100));
-            } catch (InterruptedException e) {
-                return;
-            }*/
         }
 		try {
-			// Execute the operations.
 			for (Operation operation : operations) {
 				operation.run();
 			}
@@ -57,12 +51,13 @@ class Transaction implements Runnable {
 					successfulLocks.add(account);
 				}
 				else {
+					//Free the locks so that other transaction may attempt a fully successful acquisition.
 					releaseLocks(successfulLocks);
 					return false;
 				}
 
 			}
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			releaseLocks(successfulLocks);
 		}
 		return true;
