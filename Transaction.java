@@ -11,7 +11,6 @@ class Transaction implements Runnable {
 
 	void add(Operation operation) {
 		if (closed) return;
-		operation.setHandleLock(false);
 		operations.add(operation);
 		targetedAccounts.add(operation.getAccount());
 	}
@@ -26,7 +25,14 @@ class Transaction implements Runnable {
 		// that could be restored if an exception occurs, this would however cause an additional performance loss due to clone semantics.
 
 		// Wait until all the locks are acquire before running, as per the requirements of Transactions
-		acquireLocks();
+		while(!acquireLocks());
+		{
+            try {
+                Thread.sleep(0,1);
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
 		try {
 			// Execute the operations.
 			for (Operation operation : operations) {
@@ -34,18 +40,31 @@ class Transaction implements Runnable {
 			}
 		}
 		finally {
-			releaseLocks();
+			releaseLocks(targetedAccounts);
 		}
 	}
 
-	private void acquireLocks() {
-		for(Account account : targetedAccounts) {
-			account.acquireWriteLock();
+	private boolean acquireLocks() {
+		HashSet<Account> successfulLocks = new HashSet<>(targetedAccounts.size());
+		try {
+			for (Account account : targetedAccounts) {
+				if (account.tryAcquireWriteLock()) {
+					successfulLocks.add(account);
+				}
+				else {
+					releaseLocks(successfulLocks);
+					return false;
+				}
+
+			}
+		} catch (InterruptedException e) {
+			releaseLocks(successfulLocks);
 		}
+		return true;
 	}
 
-	private void releaseLocks() {
-		for(Account account : targetedAccounts) {
+	private void releaseLocks(Set<Account> lockedAccounts) {
+		for(Account account : lockedAccounts) {
 			account.releaseWriteLock();
 		}
 	}
