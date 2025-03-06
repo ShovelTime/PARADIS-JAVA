@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+//Not much to be done here, as this is inherently a wrapper for a list.
+
 class Bank {
 	// Instance variables.
 	private final List<Account> accounts = new CopyOnWriteArrayList<>(); // Allow multiple thread to add and access accounts.
