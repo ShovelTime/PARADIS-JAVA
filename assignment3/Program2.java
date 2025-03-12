@@ -62,12 +62,11 @@ public class Program2 {
         long start = System.nanoTime();
 
         List<WebPage> pages = List.of(webPages);
-        List<String> processedPages = pages.parallelStream().map(webPage -> {
-                downloadWebPage(webPage);
-                analyzeWebPage(webPage);
-                categorizeWebPage(webPage);
-                return webPage.toString();
-        }).toList();
+        List<String> processedPages = pages.parallelStream()
+                .peek(Program2::downloadWebPage)
+                .peek(Program2::analyzeWebPage)
+                .peek(Program2::categorizeWebPage)
+                .map(WebPage::toString).toList();
 
         // Stop timing.
         long stop = System.nanoTime();
