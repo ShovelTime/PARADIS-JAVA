@@ -12,6 +12,7 @@ public class Program1 {
     final static int NUM_WEBPAGES = 40;
     private static final WebPage[] webPages = new WebPage[NUM_WEBPAGES];
 
+    //Is slightly slower than Program2, on general taking 2.0 seconds to execute on an i5-8300H
     private void exec() throws InterruptedException {
         initialize();
         long baseStart = System.nanoTime();

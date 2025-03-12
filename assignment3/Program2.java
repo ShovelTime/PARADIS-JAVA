@@ -11,31 +11,40 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+//Is slightly faster than Program1, on general taking 1.7 seconds to execute on an i5-8300H
 public class Program2 {
     final static int NUM_WEBPAGES = 40;
-    private static WebPage[] webPages = new WebPage[NUM_WEBPAGES];
+    private static final WebPage[] webPages = new WebPage[NUM_WEBPAGES];
     // [You are welcome to add some variables.]
 
     // [You are welcome to modify this method, but it should NOT be parallelized.]
     private static void initialize() {
-        for (int i = 0; i < NUM_WEBPAGES; i++) {
-            webPages[i] = new WebPage(i, "http://www.site.se/page" + i + ".html");
+        synchronized (webPages) {
+            for (int i = 0; i < NUM_WEBPAGES; i++) {
+                webPages[i] = new WebPage(i, "http://www.site.se/page" + i + ".html");
+            }
         }
     }
 
     // [Do modify this sequential part of the program.]
     private static void downloadWebPage(WebPage webPage) {
-        webPage.download();
+        synchronized (webPage) {
+            webPage.download();
+        }
     }
 
     // [Do modify this sequential part of the program.]
     private static void analyzeWebPage(WebPage webPage) {
-        webPage.analyze();
+        synchronized (webPage) {
+            webPage.analyze();
+        }
     }
 
     // [Do modify this sequential part of the program.]
     private static void categorizeWebPage(WebPage webPage) {
-        webPage.categorize();
+        synchronized (webPage) {
+            webPage.categorize();
+        }
     }
 
     // [You are welcome to modify this method, but it should NOT be parallelized.]
@@ -52,14 +61,12 @@ public class Program2 {
         // Start timing.
         long start = System.nanoTime();
 
-        List<WebPage> pages = Collections.unmodifiableList(Arrays.asList(webPages));
+        List<WebPage> pages = List.of(webPages);
         List<String> processedPages = pages.parallelStream().map(webPage -> {
-            synchronized (webPage) {
                 downloadWebPage(webPage);
                 analyzeWebPage(webPage);
                 categorizeWebPage(webPage);
                 return webPage.toString();
-            }
         }).toList();
 
         // Stop timing.
