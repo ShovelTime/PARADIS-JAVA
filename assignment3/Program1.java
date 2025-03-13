@@ -147,3 +147,78 @@ public class Program1 {
         new Program1().exec();
     }
 }
+
+class ChainTaskExecutable extends RecursiveAction {
+    private final ArrayBlockingQueue<WebPage> from, to;
+    private final Consumer<WebPage> function;
+    ChainTaskExecutable(ArrayBlockingQueue<WebPage> from, ArrayBlockingQueue<WebPage> to, Consumer<WebPage> function) {
+        this.from = from;
+        this.to = to;
+        this.function = function;
+    }
+
+    @Override
+    protected void compute() {
+        try {
+            WebPage fromPage = from.take();
+            function.accept(fromPage);
+            to.put(fromPage);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+}
+
+class BaseForkExecutable extends RecursiveTask<WebPage> {
+    private final WebPage targetPage;
+    private final List<Consumer<WebPage>> functions;
+
+    BaseForkExecutable(WebPage targetPage, List<Consumer<WebPage>> functions) {
+        this.targetPage = targetPage;
+        this.functions = functions;
+    }
+
+    @Override
+    protected WebPage compute() {
+        ArrayList<ArrayBlockingQueue<WebPage>> queues = new ArrayList<>(functions.size() + 1);
+        ArrayList<ForkJoinTask<Void>> tasks = new ArrayList<>(functions.size());
+        for(int i = 0; i < functions.size() + 1; i++) {
+            queues.add(new ArrayBlockingQueue<>(1));
+        }
+        for (int i = 0; i < functions.size(); i++) {
+            ChainTaskExecutable task = new ChainTaskExecutable(queues.get(i), queues.get(i + 1), functions.get(i));
+            tasks.add(task);
+        }
+
+        try {
+            queues.getFirst().put(targetPage);
+            invokeAll(tasks);
+            return queues.getLast().take();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+class SharedBaseForkExecutable extends RecursiveAction {
+    private final List<Consumer<WebPage>> functions;
+    private final List<ArrayBlockingQueue<WebPage>> queues;
+
+    SharedBaseForkExecutable(List<ArrayBlockingQueue<WebPage>> queues, List<Consumer<WebPage>> functions) {
+        this.queues = queues;
+        this.functions = functions;
+    }
+
+    @Override
+    protected void compute() {;
+        ArrayList<ForkJoinTask<Void>> tasks = new ArrayList<>(functions.size());
+        for (int i = 0; i < functions.size(); i++) {
+            ChainTaskExecutable task = new ChainTaskExecutable(queues.get(i), queues.get(i + 1), functions.get(i));
+            tasks.add(task);
+        }
+
+        invokeAll(tasks);
+    }
+
+}
