@@ -98,9 +98,24 @@ public class MyExecutor implements ExecutorService {
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> collection, long l, TimeUnit timeUnit) throws InterruptedException {
         List<FutureTask<T>> tasks = collection.stream().map(FutureTask::new).toList();
+        List<Future<T>> futures = tasks.stream().map(task -> (RunnableFuture<T>) task).collect(Collectors.toList());
         this.waitingTasks.addAll(tasks);
 
-        return List.of();
+        long nanoTimeRemaining = timeUnit.toNanos(l);
+
+        while(!shutdown && nanoTimeRemaining > 0) {
+            long start = System.nanoTime();
+            try {
+                tasks.removeFirst().get(nanoTimeRemaining, TimeUnit.NANOSECONDS);
+                long end = System.nanoTime();
+                long duration = end - start;
+                nanoTimeRemaining -= duration;
+            } catch (ExecutionException | TimeoutException e) {
+                return Collections.unmodifiableList(tasks);
+            }
+        }
+
+        return Collections.unmodifiableList(tasks);
     }
 
     @Override
