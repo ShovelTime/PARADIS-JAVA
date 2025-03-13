@@ -211,7 +211,7 @@ class SharedBaseForkExecutable extends RecursiveAction {
     }
 
     @Override
-    protected void compute() {;
+    protected void compute() {
         ArrayList<ForkJoinTask<Void>> tasks = new ArrayList<>(functions.size());
         for (int i = 0; i < functions.size(); i++) {
             ChainTaskExecutable task = new ChainTaskExecutable(queues.get(i), queues.get(i + 1), functions.get(i));
