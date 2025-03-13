@@ -13,23 +13,23 @@ public class Program1 {
     //Is slightly slower than Program2, on general taking 2.0 seconds to execute on an i5-8300H
     private void exec() throws InterruptedException {
         initialize();
-        long baseStart = System.nanoTime();
+        //long baseStart = System.nanoTime();
         //ArrayList<ArrayBlockingQueue<WebPage>> endpoints = new ArrayList<>(NUM_WEBPAGES);
-        List<WebPage> results = runBaseExecution();
-        long baseEnd = System.nanoTime();
+        //List<WebPage> results = runBaseExecution();
+        //long baseEnd = System.nanoTime();
 
-        if(results.size() != NUM_WEBPAGES) throw new RuntimeException("Invalid base result! result size: " + results.size() + " compared to invariant " + NUM_WEBPAGES);
-        presentResult(results);
+        //if(results.size() != NUM_WEBPAGES) throw new RuntimeException("Invalid base result! result size: " + results.size() + " compared to invariant " + NUM_WEBPAGES);
+        //presentResult(results);
 
         long sharedStart = System.nanoTime();
-        results = runSharedExecution();
+        List<WebPage> results = runSharedExecution();
         long sharedEnd = System.nanoTime();
 
         if(results.size() != NUM_WEBPAGES) throw new RuntimeException("Invalid shared result! result size: " + results.size() + " compared to invariant " + NUM_WEBPAGES);
         presentResult(results);
 
-        System.out.println("Base Execution time (seconds): " + (baseEnd - baseStart) / 1.0E9);
-        System.out.println("Shared Execution time (seconds): " + (sharedEnd - sharedStart) / 1.0E9);
+        //System.out.println("Base Execution time (seconds): " + (baseEnd - baseStart) / 1.0E9);
+        System.out.println("Execution time (seconds): " + (sharedEnd - sharedStart) / 1.0E9);
 
     }
 
@@ -76,6 +76,7 @@ public class Program1 {
     }
 
 
+    /*
     //Single producer Single Consumer variant, every base task manages their own queue pool for a particular website.
     private List<WebPage> runBaseExecution() {
         ForkJoinPool forkJoinPool = new ForkJoinPool();
@@ -100,7 +101,7 @@ public class Program1 {
         List<WebPage> results = executables.stream().map(ForkJoinTask::join).toList();
         return results;
     }
-
+    */
     private static void initialize() {
         synchronized (webPages)
         {
