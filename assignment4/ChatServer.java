@@ -9,12 +9,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
 
+
+/**
+ * Chat server which will echo any sent message to it to all connected clients.
+ * Will run connected sockets on their separate unique threads.
+ * Message received are guaranteed to be retransmitted in the same order in which they came in.
+ */
 public class ChatServer extends Thread {
     public final static int MAX_CLIENT_CONNECTIONS = 24;
     public final static InetSocketAddress SERVER_ADDRESS = new InetSocketAddress("127.0.0.1", 8000);
     // + 1 is for the message handler thread.
     private final ExecutorService threadPool = Executors.newFixedThreadPool(MAX_CLIENT_CONNECTIONS + 1);
+
+    //Allows us to concurrently write and read form the clients list, with the caveat that add operations will be more expensive.
     private final CopyOnWriteArrayList<ConnectionHandler> clients = new CopyOnWriteArrayList<>();
+
+    //The priority blocking queue allows us to put earlier messages in front of the queue, even if somehow a "later" message got added first.
     private final PriorityBlockingQueue<Message> messageQueue = new PriorityBlockingQueue<>(MAX_CLIENT_CONNECTIONS * 2);
 
 
@@ -86,6 +96,12 @@ public class ChatServer extends Thread {
     }
 }
 
+
+/**
+ * Thread dedicated to processing incoming messages
+ * Message redirection to connected clients is done via a parallel stream over the clients List
+ * Ensure that the client's list is thread safe, this class will not provide any synchronization guarantees over the iteration.
+ */
 class MessageHandler implements Runnable {
     private final PriorityBlockingQueue<Message> messageQueue;
     private final List<ConnectionHandler> clients;
@@ -107,6 +123,10 @@ class MessageHandler implements Runnable {
     }
 }
 
+
+/**
+ * IO wrapper around an opened socket, will continuously read and submit any incoming messages from the socket to the queue.
+ */
 class ConnectionHandler implements Runnable {
     private final ChatServer server;
     private final Socket connectionSocket;
@@ -156,7 +176,7 @@ class ConnectionHandler implements Runnable {
                     in.close();
                     out.close();
                 }
-            } catch (IOException _) {}
+            } catch (IOException e) {e.printStackTrace();}
             System.out.println("Disconnected from " + name);
             server.removeClient(this);
         }
