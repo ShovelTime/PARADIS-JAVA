@@ -18,12 +18,11 @@ import java.util.concurrent.*;
 public class ChatServer extends Thread {
     public final static int MAX_CLIENT_CONNECTIONS = 24;
     public final static InetSocketAddress SERVER_ADDRESS = new InetSocketAddress("127.0.0.1", 8000);
+
     // + 1 is for the message handler thread.
     private final ExecutorService threadPool = Executors.newFixedThreadPool(MAX_CLIENT_CONNECTIONS + 1);
-
     //Allows us to concurrently write and read form the clients list, with the caveat that add operations will be more expensive.
     private final CopyOnWriteArrayList<ConnectionHandler> clients = new CopyOnWriteArrayList<>();
-
     //The priority blocking queue allows us to put earlier messages in front of the queue, even if somehow a "later" message got added first.
     private final PriorityBlockingQueue<Message> messageQueue = new PriorityBlockingQueue<>(MAX_CLIENT_CONNECTIONS * 2);
 
